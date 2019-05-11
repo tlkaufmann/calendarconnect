@@ -13,11 +13,17 @@ from scraping_tools import *
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--url", help="", type=str)
+    parser.add_argument("--title", help="", type=str)
+    parser.add_argument("--date", help="", type=str)
+    args = parser.parse_args()  
+
     # Load the page
     URL = args.url
     example_title = args.title
 
-    titles, dates = scrap_events(URL, example_title)
+    titles, dates, links = scrap_events(URL, example_title)
 
-    for title, date in zip(titles, dates):
-        print("{}: \t{}".format(title, date))
+    for title, date, link in zip(titles, dates, links):
+        print("{}: \t{} \t{}".format(title, date, link))

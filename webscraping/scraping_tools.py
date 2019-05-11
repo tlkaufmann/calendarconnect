@@ -5,17 +5,8 @@ from bs4 import BeautifulSoup
 import io
 import re
 from datetime import date, timedelta
-import argparse
 from dateutil.parser import parse
 import numpy as np
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--url", help="", type=str)
-parser.add_argument("--title", help="", type=str)
-parser.add_argument("--date", help="", type=str)
-args = parser.parse_args()  
-
 
 def simple_get(url):
     """
@@ -106,6 +97,27 @@ def find_date(soup, title):
             
     return example_date
 
+def find_link(soup, title):
+    div = soup.find(text=title)
+    div = div.parent
+
+    re_link = 'href=\".*\"'
+
+    for i in range(5):
+        match = re.search(re_link, str(div))
+        # print(match)
+        if match:
+            break
+        else:
+            div = div.parent
+            
+    if match:
+        link = match.group().split('"')[1]
+    else:
+        link = ''
+            
+    return link
+
 def scrap_events(URL, example_title):
     
     raw_html = simple_get(URL)
@@ -123,7 +135,6 @@ def scrap_events(URL, example_title):
             break
             
     if example:
-
         ex = example
         for i in range(5):
             try:
@@ -139,12 +150,17 @@ def scrap_events(URL, example_title):
     matches = soup.find_all(attrs={'class': example_class})
     titles = []
     for match in matches:
-        m = match.text.split('\n')[title_pos]
-        titles.append(m)
+        if match:
+            m = match.text.split('\n')[title_pos]
+            titles.append(m)
+        else:
+            titles.append('')
 
     dates = []
+    links = []
 
     for title in titles:
         dates.append(find_date(soup, title))
+        links.append(find_link(soup, title))
 
-    return titles, dates
+    return titles, dates, links
