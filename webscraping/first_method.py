@@ -4,6 +4,7 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 import io
 import re
+from datetime import date, timedelta
 
 def simple_get(url):
     """
@@ -41,38 +42,49 @@ def log_error(e):
     """
     print(e)
 
+def find_date(title):
+    div = soup.find(text=title)
+    
+    div = div.parent
+
+    for i in range(5):
+        match = re.findall(re_pattern, div.text)
+        if match:
+            break
+        else:
+            div = div.parent
+            
+    example_date = div.find(text = re.compile(re_pattern))
+    example_date = re.findall(re_pattern, example_date)
+    
+    if len(example_date) == 1:
+        example_date = example_date[0]
+
+    if len(example_date)==2:
+        date_1 = date(*[int(x) for x in reversed(example_date[0].split('.'))])
+        date_2 = date(*[int(x) for x in reversed(example_date[1].split('.'))]) 
+
+        if(date_2-date_1 > timedelta(0)):
+            example_date = ' - '.join(example_date)
+            
+    return example_date
+
 URL = 'https://zkm.de/en/exhibitions-events/current-exhibitions'
-URL2 = 'https://events.microsoft.com/?timeperiod=next30Days&isSharedInLocalViewMode=false&country=Germany&city=Karlsruhe,%20Baden-W%C3%BCrttemberg,%20Germany'
+example_title = 'Writing the History of the Future'
+re_pattern = '[0-9]{1,2}\\.[0-9]{1,2}\\.[20]*[1,2][0-9]'
 
 raw_html = simple_get(URL)
 soup = BeautifulSoup(raw_html, 'html.parser')
 
-example_title = 'Writing the History of the Future'
 example = soup.find(text=example_title)
+
 example_class = example.parent.parent['class']
-
 matches = soup.find_all(attrs={'class': example_class})
-
-print('All titles')
+titles = []
 for match in matches:
-    print(match.text)
+    m = re.sub('\n', '', match.text)
+    titles.append(m)
 
-
-
-example = example.parent
-
-for i in range(5):
-    match = re.findall('2019', example.text)
-    if match:
-        break
-    else:
-        example = example.parent
-
-
-print('Div of title:')
-print(example.text)
-
-
-
-
+for title in titles:
+    print("{}: \t{}".format(title, find_date(title)))
 
