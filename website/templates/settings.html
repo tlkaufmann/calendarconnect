@@ -1,0 +1,32 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+<div>
+    <h1>Settings</h1>
+
+    <h2>Manage websites</h2>
+
+    <ul class="list-group">
+        {% for %}
+        <li class="list-group-item">Cras justo odio</li>
+        <li class="list-group-item">Dapibus ac facilisis in</li>
+      </ul>
+
+
+    <h2>Add new Website to your feed</h2>
+    {% from 'includes/_formhelpers.html' import render_field %}
+    <form class="form-inline" method='POST' action=''>
+        <div class='form-group'>
+            {{render_field(form.website, class_='form-control')}}
+        </div>
+        <div class='form-group'>
+            {{render_field(form.sample_title, class_='form-control')}}
+        </div>
+        <input type='submit' class='btn btn-primary' value='Submit'></input>
+
+    </form>
+    <p> </p>
+
+</div>
+<a href="/dashboard" class="btn btn-info btn-lg btn-block">back</a>
+{% endblock %}

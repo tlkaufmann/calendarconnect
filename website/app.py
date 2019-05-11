@@ -35,10 +35,6 @@ def index():
 def about():
     return render_template('about.html')
 
-@app.route('/articles')
-def articles():
-    return render_template('articles.html', articles = Articles())
-
 @app.route('/articles/<string:id>/')
 def article(id):
     return render_template('article.html', id = id)
@@ -59,6 +55,10 @@ class LoginForm(Form):
         validators.Length(min = 3, max = 30),
         validators.DataRequired()])
 
+class WebsiteForm(Form):
+    website = StringField('Website', validators=[validators.input_required()])
+    sample_title = StringField('Sample Title', validators=[validators.input_required()])
+    
 @app.route('/register', methods = ['GET', 'POST'])
 def register():
     form = RegisterForm(request.form)
@@ -142,6 +142,31 @@ def logout():
 @is_logged_in
 def dashboard():
     return render_template('dashboard.html', session=session)
+
+@app.route('/settings', methods=['GET', 'POST'])
+@is_logged_in
+def settings():
+    form = WebsiteForm(request.form)
+
+    if request.method == 'POST':
+        # Get Form Fields
+        website = form.website.data
+        sample_title = form.sample_title.data
+
+        cursor = get_db().cursor()
+        cursor.execute("""INSERT INTO websites(user, url, sample_title) VALUES(?, ?, ?)""", 
+                                        (session['username'], website, sample_title))
+        get_db().commit()
+        get_db().close()
+
+        flash('Page submitted', 'success')
+    
+    if request.method == 'GET':
+        cursor = get_db().cursor()
+        cursor.execute("SELECT * FROM websites WHERE user='{}'".format(session['username']))
+        data = cursor.fetchall()
+
+    return render_template('settings.html', session=session, form = form)
 
 
 
