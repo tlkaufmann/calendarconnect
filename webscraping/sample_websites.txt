@@ -1,0 +1,8 @@
+URL = 'https://zkm.de/en/exhibitions-events/current-exhibitions'
+example_title = 'Writing the History of the Future'
+
+URL = 'https://www.microsoft.com/de-de/techwiese/events/default.aspx?Veranstalter=Community'
+example_title = 'Bau dir einen Serverless EventStore'
+
+URL = 'https://mlh.io/seasons/eu-2019/events'
+example_title = 'HackSheffield'
