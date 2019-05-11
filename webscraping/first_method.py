@@ -5,6 +5,14 @@ from bs4 import BeautifulSoup
 import io
 import re
 from datetime import date, timedelta
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--url", help="", type=str)
+parser.add_argument("--title", help="", type=str)
+args = parser.parse_args()  
+
 
 def simple_get(url):
     """
@@ -22,7 +30,6 @@ def simple_get(url):
     except RequestException as e:
         log_error('Error during requests to {0} : {1}'.format(url, str(e)))
         return None
-
 
 def is_good_response(resp):
     """
@@ -69,8 +76,10 @@ def find_date(title):
             
     return example_date
 
-URL = 'https://zkm.de/en/exhibitions-events/current-exhibitions'
-example_title = 'Writing the History of the Future'
+# URL = 'https://zkm.de/en/exhibitions-events/current-exhibitions'
+# example_title = 'Writing the History of the Future'
+URL = args.url
+example_title = args.title
 re_pattern = '[0-9]{1,2}\\.[0-9]{1,2}\\.[20]*[1,2][0-9]'
 
 raw_html = simple_get(URL)
