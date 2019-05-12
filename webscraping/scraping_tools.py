@@ -115,7 +115,7 @@ def find_link(soup, title):
         link = match.group().split('"')[1]
     else:
         link = ''
-            
+
     return link
 
 def scrap_events(URL, example_title):

@@ -4,6 +4,10 @@ from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from os import urandom
 from functools import wraps
+import sys, os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'webscraping'))
+from scraping_tools import scrap_events
 
 app = Flask(__name__)
 app.debug = True
@@ -54,8 +58,9 @@ class LoginForm(Form):
         validators.DataRequired()])
 
 class WebsiteForm(Form):
-    website = StringField('Website', validators=[validators.input_required()])
+    name = StringField('Name', validators=[validators.input_required()])
     sample_title = StringField('Sample Title', validators=[validators.input_required()])
+    url = StringField('URL', validators=[validators.input_required()])
     
 @app.route('/register', methods = ['GET', 'POST'])
 def register():
@@ -139,7 +144,36 @@ def logout():
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
-    return render_template('dashboard.html', session=session)
+    cursor = get_db().cursor()
+    cursor.execute("SELECT * FROM events WHERE user='{}'".format(session['username']))
+    data = cursor.fetchall()
+    get_db().close()
+
+    return render_template('dashboard.html', session = session, data = data)
+
+@app.route('/refresh_dashboard', methods=['POST', 'GET'])
+def refresh_dashboard():
+    cursor = get_db().cursor()
+    cursor.execute("SELECT * FROM websites WHERE user='{}'".format(session['username']))
+    data = cursor.fetchall()
+    cursor.executescript('delete from events')
+
+    for data_point in data:
+        titles, dates, links = scrap_events(data_point['url'], data_point['sample_title'])
+        
+        for title, date, link in zip(titles, dates, links):
+            cursor = get_db().cursor()
+            cursor.execute("""INSERT INTO events(user, website, url, title, date, link) VALUES(?, ?, ?, ?, ?, ?)""", 
+                                            (session['username'], data_point['name'], data_point['url'], title, date, link))
+            
+    get_db().commit()
+    get_db().close()
+
+    flash('Refreshed', 'success')
+
+    return redirect(url_for('dashboard'))
+
+
 
 @app.route('/settings', methods=['GET', 'POST'])
 @is_logged_in
@@ -148,15 +182,22 @@ def settings():
 
     if request.method == 'POST':
         # Get Form Fields
-        website = form.website.data
+        url = form.url.data
+        name = form.name.data
         sample_title = form.sample_title.data
 
-        cursor = get_db().cursor()
-        cursor.execute("""INSERT INTO websites(user, url, sample_title) VALUES(?, ?, ?)""", 
-                                        (session['username'], website, sample_title))
-        get_db().commit()
+        existing_urls = query_db('select * from websites where url = ?', (url, ))
+        if existing_urls:
+            flash('Website already exists', 'danger')
 
-        flash('Page submitted', 'success')
+        else:
+
+            cursor = get_db().cursor()
+            cursor.execute("""INSERT INTO websites(user, url, name, sample_title) VALUES(?, ?, ?, ?)""", 
+                                               (session['username'], url, name, sample_title))
+            get_db().commit()
+
+            flash('Page submitted', 'success')
     
 
     cursor = get_db().cursor()
@@ -167,6 +208,14 @@ def settings():
     return render_template('settings.html', session=session, form = form, data = data)
 
 
+@app.route('/delete_website', methods=['POST'])
+def delete_website():
+    cursor = get_db().cursor()
+    cursor.execute('delete from websites where url = ?', [request.form['website_to_delete']])
+    get_db().commit()
+    get_db().close()
+
+    return redirect(url_for('settings'))
 
 if __name__ == '__main__':
     app.secret_key = urandom(24)

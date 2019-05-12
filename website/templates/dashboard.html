@@ -1,8 +1,55 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <div class="jumbotron text-center">
-    <h1>Dashboard <small> Welcome {{session.username}}</small> </h1>
+<div class="jumbotron text-center">
+  <h1>Welcome {{session.username}} </h1>
+</div>
+
+<div class="row">
+  <div class="col-sm-2">
+    <a href="/settings" class="btn btn-info btn-lg">Settings</a>
+
   </div>
-  <a href="/settings" class="btn btn-info btn-lg btn-block">Settings</a>
+  <div class="col-sm-2">
+    <form action="/refresh_dashboard">
+      <input type=submit name="refresh_dashboard" class='btn btn-lg btn-info' value='Refresh'></input>
+    </form>
+
+  </div>
+
+
+</div>
+
+
+
+
+<table data-toggle="table">
+  <thead class="thead-dark">
+    <tr>
+      <th data-sortable="true" data-field="date">Date</th>
+      <th data-sortable="true" scope="col">Website</th>
+      <th data-sortable="false" scope="col">Title</th>
+      <th data-sortable="false" scope="col">Link</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in data %}
+    <tr>
+      <td>{{item.date}}</td>
+      <td>{{item.website}}</td>
+      <td>{{item.title}}</td>
+      <td>{{item.link}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+<ul class="list-group">
+  {% for title in titles %}
+  <li class="list-group-item">{{item}}</li>
+  {% endfor %}
+</ul>
+
+
 {% endblock %}
