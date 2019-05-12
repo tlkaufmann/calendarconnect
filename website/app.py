@@ -5,10 +5,8 @@ from passlib.hash import sha256_crypt
 from os import urandom
 from functools import wraps
 
-
 app = Flask(__name__)
 app.debug = True
-
 
 # SQlite stuff
 DATABASE = 'database.db'
@@ -157,16 +155,16 @@ def settings():
         cursor.execute("""INSERT INTO websites(user, url, sample_title) VALUES(?, ?, ?)""", 
                                         (session['username'], website, sample_title))
         get_db().commit()
-        get_db().close()
 
         flash('Page submitted', 'success')
     
-    if request.method == 'GET':
-        cursor = get_db().cursor()
-        cursor.execute("SELECT * FROM websites WHERE user='{}'".format(session['username']))
-        data = cursor.fetchall()
 
-    return render_template('settings.html', session=session, form = form)
+    cursor = get_db().cursor()
+    cursor.execute("SELECT * FROM websites WHERE user='{}'".format(session['username']))
+    data = cursor.fetchall()
+    get_db().close()
+
+    return render_template('settings.html', session=session, form = form, data = data)
 
 
 

@@ -6,10 +6,24 @@
 
     <h2>Manage websites</h2>
 
-    <ul class="list-group">
-        <li class="list-group-item">Cras justo odio</li>
-        <li class="list-group-item">Dapibus ac facilisis in</li>
-      </ul>
+
+    <div class="container">
+        <div class="col-md-8">
+            <div class="list-group">
+                {% for item in data %}
+                <p class="list-group-item clearfix">
+                    {{item[1]}}
+                    <span class="pull-right">
+                        <span class="btn btn-xs btn-default"
+                            onclick="alert('Action1 -> Play'); event.stopPropagation();">
+                            <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+                        </span>
+                    </span>
+                </p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 
 
     <h2>Add new Website to your feed</h2>
