@@ -5,12 +5,18 @@ from passlib.hash import sha256_crypt
 from os import urandom
 from functools import wraps
 import sys, os
+from datetime import date as datetime_date
+from datetime import timedelta
+from dateutil.parser import parse
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'webscraping'))
-from scraping_tools import scrap_events
+from scraping_tools import scrap_events, uniform_date
 
 app = Flask(__name__)
 app.debug = True
+
+global_nr_next_weeks = 0
+
 
 # SQlite stuff
 DATABASE = 'database.db'
@@ -144,12 +150,28 @@ def logout():
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
+    global global_nr_next_weeks
+
+    nr_next_weeks = request.args.get('nr_next_weeks')
+    if not nr_next_weeks:
+        nr_next_weeks = global_nr_next_weeks
+    else:
+        global_nr_next_weeks = nr_next_weeks
+    
+
     cursor = get_db().cursor()
     cursor.execute("SELECT * FROM events WHERE user='{}'".format(session['username']))
     data = cursor.fetchall()
     get_db().close()
 
-    return render_template('dashboard.html', session = session, data = data)
+    new_data = []
+    today = parse(str(datetime_date.today()))
+    for datapoint in data:
+        if (parse(datapoint['date']) - today) > timedelta(0):
+            if (parse(datapoint['date']) - today) < timedelta(7*int(nr_next_weeks)):
+                new_data.append(datapoint)
+
+    return render_template('dashboard.html', session = session, data = new_data, nr_next_weeks = nr_next_weeks)
 
 @app.route('/refresh_dashboard', methods=['POST', 'GET'])
 def refresh_dashboard():
@@ -162,9 +184,11 @@ def refresh_dashboard():
         titles, dates, links = scrap_events(data_point['url'], data_point['sample_title'])
         
         for title, date, link in zip(titles, dates, links):
-            cursor = get_db().cursor()
-            cursor.execute("""INSERT INTO events(user, website, url, title, date, link) VALUES(?, ?, ?, ?, ?, ?)""", 
-                                            (session['username'], data_point['name'], data_point['url'], title, date, link))
+            if not title.isspace():
+                date = uniform_date(date)
+                
+                cursor.execute("""INSERT INTO events(user, website, url, title, date, link) VALUES(?, ?, ?, ?, ?, ?)""", 
+                                                (session['username'], data_point['name'], data_point['url'], title, date, link))
             
     get_db().commit()
     get_db().close()

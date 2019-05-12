@@ -71,52 +71,58 @@ def regex_date(string):
 
 def find_date(soup, title):
     div = soup.find(text=title)
+
+    if div:
     
-    div = div.parent
+        div = div.parent
 
-    for i in range(10):
-        match = regex_date(div.text)
-        if match:
-            break
-        else:
-            div = div.parent
+        for i in range(10):
+            match = regex_date(div.text)
+            if match:
+                break
+            else:
+                div = div.parent
+                
+        example_date = regex_date(div.text)
+        if not example_date:
+            example_date = None
             
-    example_date = regex_date(div.text)
-    if not example_date:
-        example_date = None
-        
-    elif len(example_date) == 1:
-        example_date = example_date[0]
+        elif len(example_date) == 1:
+            example_date = example_date[0]
 
-    elif len(example_date)==2:
-        date_1 = date(*[int(x) for x in reversed(example_date[0].split('.'))])
-        date_2 = date(*[int(x) for x in reversed(example_date[1].split('.'))]) 
+        elif len(example_date)==2:
+            date_1 = date(*[int(x) for x in reversed(example_date[0].split('.'))])
+            date_2 = date(*[int(x) for x in reversed(example_date[1].split('.'))]) 
 
-        if(date_2-date_1 > timedelta(0)):
-            example_date = ' - '.join(example_date)
-            
-    return example_date
+            if(date_2-date_1 > timedelta(0)):
+                example_date = ' - '.join(example_date)
+                
+        return example_date
+    else: return None
 
 def find_link(soup, title):
     div = soup.find(text=title)
-    div = div.parent
 
-    re_link = 'href=\".*\"'
+    if div:
+        div = div.parent
 
-    for i in range(5):
-        match = re.search(re_link, str(div))
-        # print(match)
+        re_link = 'href=\".*\"'
+
+        for i in range(5):
+            match = re.search(re_link, str(div))
+            # print(match)
+            if match:
+                break
+            else:
+                div = div.parent
+                
         if match:
-            break
+            link = match.group().split('"')[1]
         else:
-            div = div.parent
-            
-    if match:
-        link = match.group().split('"')[1]
-    else:
-        link = ''
-
-    return link
+            link = ''
+                
+        return link
+    else: return None
 
 def scrap_events(URL, example_title):
     
@@ -133,6 +139,8 @@ def scrap_events(URL, example_title):
             example = None
         if example:
             break
+        
+    print(example)
             
     if example:
         ex = example
@@ -143,24 +151,57 @@ def scrap_events(URL, example_title):
             except:
                 ex = ex.parent
         title_pos = np.where(example_title == np.array(ex.text.split('\n')))[0][0]
+
+        # Find the titles
+        matches = soup.find_all(attrs={'class': example_class})
+        titles = []
+        for match in matches:
+            if match:
+                m = match.text.split('\n')[title_pos]
+                titles.append(m)
+            else:
+                titles.append('')
     else:
         example_class = None
-
-    # Find the titles
-    matches = soup.find_all(attrs={'class': example_class})
-    titles = []
-    for match in matches:
-        if match:
-            m = match.text.split('\n')[title_pos]
-            titles.append(m)
-        else:
-            titles.append('')
+        titles = []
 
     dates = []
     links = []
+    new_titles = []
 
+    print('len(titles)', len(titles))
     for title in titles:
-        dates.append(find_date(soup, title))
-        links.append(find_link(soup, title))
+        date = find_date(soup, title)
+        link = find_link(soup, title)
 
-    return titles, dates, links
+        if link == '':
+            link = URL
+        if not 'http' in link:
+            link = URL
+            
+        if date and link: 
+            dates.append(date)
+            links.append(link)
+            new_titles.append(title)
+    print('len(new_titles)', len(new_titles))
+    
+
+    return new_titles, dates, links
+
+
+def uniform_date(date):
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    months_short = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
+    months_de = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
+    months_de_short = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez']
+    
+    for en, de in zip(months, months_de):
+        date = re.sub(de, en, date)
+    
+    try:
+        date = parse(date)
+        date = date.strftime('%d.%m.%Y')
+    except:
+        date = ''
+
+    return date

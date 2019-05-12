@@ -3,24 +3,57 @@
 {% block body %}
 <div class="jumbotron text-center">
   <h1>Welcome {{session.username}} </h1>
+
+  <div class="row">
+    <div class="col-sm-4"></div>
+
+    <div class="col-sm-2">
+
+      <a href="/settings" class="btn btn-info btn-lg">Settings</a>
+    </div>
+    <div class="col-sm-2">
+
+
+      <form action="/refresh_dashboard" padding=5px>
+        <input type=submit name="refresh_dashboard" class='btn btn-lg btn-info' value='Refresh'>
+        </input>
+      </form>
+
+    </div>
+    <div class="col-sm-4"></div>
+  </div>
+
 </div>
 
-<div class="row">
-  <div class="col-sm-2">
-    <a href="/settings" class="btn btn-info btn-lg">Settings</a>
+<form>
+  <div class="form-row align-items-center">
+    <div class="row-auto">
+      <div class="col-sm-2 align-items-center">
+        <label>Display the next weeks: </label>
+      </div>
+      <div class="col-sm-2 align-items-center">
 
+        <select name='nr_next_weeks' class="form-control">
+          <option selected>{{nr_next_weeks}}</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+        </select>
+      </div>
+
+    </div>
+    <div class="col-sm-2 align-items-center">
+      <button type="submit" class="btn btn-info">Change</button>
+    </div>
   </div>
-  <div class="col-sm-2">
-    <form action="/refresh_dashboard">
-      <input type=submit name="refresh_dashboard" class='btn btn-lg btn-info' value='Refresh'></input>
-    </form>
-
-  </div>
-
-
-</div>
-
-
+</form>
 
 
 <table data-toggle="table">
@@ -29,7 +62,6 @@
       <th data-sortable="true" data-field="date">Date</th>
       <th data-sortable="true" scope="col">Website</th>
       <th data-sortable="false" scope="col">Title</th>
-      <th data-sortable="false" scope="col">Link</th>
     </tr>
   </thead>
   <tbody>
@@ -37,8 +69,7 @@
     <tr>
       <td>{{item.date}}</td>
       <td>{{item.website}}</td>
-      <td>{{item.title}}</td>
-      <td>{{item.link}}</td>
+      <td><a href={{item.link}}>{{item.title}}</a></td>
     </tr>
     {% endfor %}
   </tbody>
