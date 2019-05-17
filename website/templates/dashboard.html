@@ -45,6 +45,7 @@
           <option value="8">8</option>
           <option value="9">9</option>
           <option value="10">10</option>
+          <option value="999">all</option>
         </select>
       </div>
 
@@ -62,6 +63,7 @@
       <th data-sortable="true" data-field="date">Date</th>
       <th data-sortable="true" scope="col">Website</th>
       <th data-sortable="false" scope="col">Title</th>
+      <th data-sortable="false" scope="col">Google Calendar</th>
     </tr>
   </thead>
   <tbody>
@@ -70,6 +72,12 @@
       <td>{{item.date}}</td>
       <td>{{item.website}}</td>
       <td><a href={{item.link}}>{{item.title}}</a></td>
+      <td>
+             <form action="{{ url_for('google_calendar') }}" method=post>
+                <input type=hidden value="{{ item.title }}" name="google_calendar"></input>
+                <input type=submit class='btn btn-sm btn-info' value='Add to Cal'></input>
+            </form>
+      </td>
     </tr>
     {% endfor %}
   </tbody>

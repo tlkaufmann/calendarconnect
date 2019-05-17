@@ -174,11 +174,13 @@ def scrap_events(URL, example_title):
         date = find_date(soup, title)
         link = find_link(soup, title)
 
-        if link == '':
+        if not link:
             link = URL
-        if not 'http' in link:
+        elif link == '':
             link = URL
-            
+        elif not 'http' in link:
+            link = URL
+
         if date and link: 
             dates.append(date)
             links.append(link)

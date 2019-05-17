@@ -8,6 +8,7 @@ import sys, os
 from datetime import date as datetime_date
 from datetime import timedelta
 from dateutil.parser import parse
+from connect_from_flask import add_to_calendar
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'webscraping'))
 from scraping_tools import scrap_events, uniform_date
@@ -196,6 +197,53 @@ def refresh_dashboard():
     flash('Refreshed', 'success')
 
     return redirect(url_for('dashboard'))
+
+@app.route('/google_calendar', methods=['POST', 'GET'])
+def google_calendar():
+
+    if 'credentials' not in session:
+        return redirect('authorize')
+
+    event = request.form['google_calendar']
+    cursor = get_db().cursor()
+    cursor.execute("SELECT * FROM events WHERE title='{}'".format(event))
+    data = cursor.fetchone()
+    get_db().close()
+    print(data)
+
+    add_to_calendar(data['title'], data['date'])
+
+   
+
+    return redirect(url_for('dashboard'))
+
+@app.route('/authorize')
+def authorize():
+    CLIENT_SECRETS_FILE = 'client_secret_webclient.json'
+
+    # This OAuth 2.0 access scope allows for full read/write access to the
+    # authenticated user's account and requires requests to use an SSL connection.
+    SCOPES = ['https://www.googleapis.com/auth/calendar.events']
+    API_SERVICE_NAME = 'calendar'
+    API_VERSION = 'v3'
+
+    # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=SCOPES)
+
+    flow.redirect_uri = url_for('oauth2callback', _external=True)
+
+    authorization_url, state = flow.authorization_url(
+        # Enable offline access so that you can refresh an access token without
+        # re-prompting the user for permission. Recommended for web server apps.
+        access_type='offline',
+        # Enable incremental authorization. Recommended as a best practice.
+        include_granted_scopes='true')
+
+    # Store the state so the callback can verify the auth server response.
+    session['state'] = state
+
+    return redirect(authorization_url)
 
 
 
